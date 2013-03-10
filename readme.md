@@ -1,1 +1,1 @@
-This is my little repository of useful Powershell scripts.
+This is my little repository of useful Powershell scripts and batch files.
