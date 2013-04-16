@@ -3,7 +3,7 @@ function Update-iTunesTracks {
 	.SYNOPSIS
 	Reloads track metadata from files and removes entries for missing tracks
 	.DESCRIPTION
-	This function reads the iTunes libray to find all the tracks and checks whether the file exists.
+	This function reads the iTunes library to find all tracks and checks whether the corresponding file exists.
 	If the file exists the ID3 tags are read and the track information is updated.  If the file does 
 	not exist the track is removed from the iTunes library.
   #>
