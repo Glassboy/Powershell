@@ -1,0 +1,41 @@
+---
+- name: Octoprint-Deploy Post Installation Tasks
+  hosts: localhost
+  become: yes
+  tasks:
+    - name: Install required packages
+      apt:
+        name:
+          - iptables
+          - iptables-persistent
+          - nfs-kernel-server
+        state: present
+        update_cache: yes
+
+    - name: Add NFS export for OctoPrint uploads
+      lineinfile:
+        path: /etc/exports
+        line: '/home/octoprint/.{{ service_name }}/watched *(rw,sync,no_subtree_check,no_root_squash)'
+        state: present
+
+    - name: Apply NFS export changes
+      command: exportfs -a
+
+    - name: Restart NFS server
+      systemd:
+        name: nfs-kernel-server
+        state: restarted
+
+    - name: Add iptables rule to redirect port 80 to port 5000
+      command: >
+        iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 5000
+
+    - name: Save iptables rules
+      shell: iptables-save > /etc/iptables/rules.v4
+      become: yes
+
+    - name: Enable netfilter-persistence service
+      service:
+        name: netfilter-persistent
+        state: started
+        enabled: yes

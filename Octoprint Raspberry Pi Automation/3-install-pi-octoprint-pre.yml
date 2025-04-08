@@ -1,0 +1,75 @@
+---
+- name: Setup OctoPrint user and configure Raspberry Pi
+  hosts: localhost
+  become: yes
+  tasks:
+    - name: Install Git packages
+      apt:
+        name:
+          - git
+        state: present
+        update_cache: yes
+
+    - name: Create octoprint user with home directory
+      user:
+        name: octoprint
+        shell: /bin/bash
+        state: present
+        create_home: yes
+        password: "{{ 'iwant2print' | password_hash('sha512') }}"
+
+    - name: Add octoprint user to required groups
+      user:
+        name: octoprint
+        groups: dialout,video,sudo
+        append: yes
+
+    - name: Ensure /home/octoprint directory exists
+      ansible.builtin.file:
+        path: /home/octoprint
+        state: directory
+        owner: octoprint
+        group: octoprint
+        mode: '0755'
+
+    - name: Create install-octoprint-deploy.sh script
+      copy:
+        dest: /home/octoprint/4-install-octoprint-deploy.sh
+        content: |
+          #!/bin/bash
+          # Clone the OctoPrint Deploy repository
+          git clone https://github.com/paukstelis/octoprint_deploy /home/octoprint/octoprint_deploy
+          # Change directory to octoprint_deploy
+          cd /home/octoprint/octoprint_deploy
+          # Run the deployment script
+          sudo ./octoprint_deploy.sh
+        mode: '0755'
+      become: yes
+
+    - name: Set ownership for 4-install-octoprint-deploy.sh
+      file:
+        path: /home/octoprint/install-octoprint-deploy.sh
+        owner: octoprint
+        group: octoprint
+      become: yes
+
+    - name: Copy the plugin playbook to /home/octoprint/
+      ansible.builtin.copy:
+        src: 6-install-pi-octoprint-plugins.yml
+        dest: /home/octoprint/install-pi-octoprint-plugins.yml
+        owner: octoprint
+        group: octoprint
+        mode: '0755'
+      become: yes
+
+    - name: Create a shell script to run the playbook
+      ansible.builtin.copy:
+        content: |
+          #!/bin/bash
+          # Capture the Octoprint Instance name from the command line
+          SERVICE_NAME=$1
+          ansible-playbook -K --ask-become-pass -i localhost, install-pi-octoprint-plugins.yml --connection=local --extra-vars "service_name=${SERVICE_NAME}"
+        dest: /home/octoprint/6-install-pi-octoprint-plugins.sh
+        owner: octoprint
+        group: octoprint
+        mode: '0755'

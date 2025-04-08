@@ -1,0 +1,68 @@
+---
+- name: Configure Raspberry Pi
+  hosts: localhost
+  become: yes
+  tasks:
+    - name: Gather Raspberry Pi model information
+      ansible.builtin.command:
+        cmd: cat /proc/device-tree/model
+      register: pi_model
+
+    - name: Speed up storage (Raspberry Pi 5 only)
+      ansible.builtin.lineinfile:
+        path: /boot/firmware/config.txt
+        line: 'dtparam=pciex1_gen=3'
+        state: present
+      when: "'Raspberry Pi 5' in pi_model.stdout"
+
+    - name: Increase swap file size (Raspberry Pi 5 only)
+      ansible.builtin.replace:
+        path: /etc/dphys-swapfile
+        regexp: '^CONF_SWAPSIZE=.*'
+        replace: 'CONF_SWAPSIZE=1024'
+      when: "'Raspberry Pi 5' in pi_model.stdout"
+
+    # Update and Upgrade System
+    - name: Update package lists
+      apt:
+        update_cache: yes
+
+    - name: Upgrade installed packages
+      apt:
+        upgrade: dist
+
+    - name: Install NFS kernel server
+      apt:
+        name: nfs-kernel-server
+        state: present
+
+    - name: Configure NFS exports
+      lineinfile:
+        path: /etc/exports
+        line: '/ *(rw,sync,no_subtree_check,no_root_squash)'
+        state: present
+
+    - name: Restart NFS server
+      systemd:
+        name: nfs-kernel-server
+        state: restarted
+
+    - name: Install Podman and Cockpit
+      apt:
+        name:
+          - podman
+          - cockpit
+          - cockpit-podman
+          - cockpit-pcp
+        state: present
+
+    - name: Configure Podman registry
+      lineinfile:
+        path: /etc/containers/registries.conf
+        line: 'unqualified-search-registries = ["docker.io"]'
+        state: present
+
+    - name: Enable Podman auto-update timer
+      systemd:
+        name: podman-auto-update.timer
+        enabled: yes

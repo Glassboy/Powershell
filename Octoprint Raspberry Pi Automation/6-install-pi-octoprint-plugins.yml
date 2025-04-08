@@ -1,0 +1,57 @@
+- name: Install OctoPrint Plugins
+  hosts: localhost
+  tasks:
+    - name: Install Slicer Thumbnails plugin
+      command: >
+        /home/octoprint/OctoPrint/bin/pip install
+        "https://github.com/jneilliii/OctoPrint-PrusaSlicerThumbnails/archive/master.zip"
+
+    - name: Install Cura Thumbnails plugin
+      command: >
+        /home/octoprint/OctoPrint/bin/pip install
+        "https://github.com/jneilliii/OctoPrint-UltimakerFormatPackage/archive/master.zip"        
+
+    - name: Install Bed Level Visualizer plugin
+      command: >
+        /home/octoprint/OctoPrint/bin/pip install
+        "https://github.com/jneilliii/OctoPrint-BedLevelVisualizer/archive/master.zip"                
+
+    - name: Install Better Heater Timeout plugin
+      command: >
+        /home/octoprint/OctoPrint/bin/pip install
+        "https://github.com/tjjfvi/OctoPrint-BetterHeaterTimeout/archive/master.zip"                        
+
+    - name: Install Cancel Object plugin
+      command: >
+        /home/octoprint/OctoPrint/bin/pip install
+        "https://github.com/paukstelis/OctoPrint-Cancelobject/archive/master.zip"                                
+
+    - name: Install Cost Estimation plugin
+      command: >
+        /home/octoprint/OctoPrint/bin/pip install
+        "https://github.com/Hillshum/OctoPrint-CostEstimation/releases/latest/download/master.zip"                                        
+
+    # - name: Install Filament Manager plugin
+    #   command: >
+    #     /home/octoprint/OctoPrint/bin/pip install
+    #     "https://github.com/OllisGit/OctoPrint-FilamentManager/releases/latest/download/master.zip"                                        
+
+    - name: Install Firmware Updater plugin
+      command: >
+        /home/octoprint/OctoPrint/bin/pip install
+        "https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/archive/master.zip"                                        
+
+    - name: Install Print Time Genius plugin
+      command: >
+        /home/octoprint/OctoPrint/bin/pip install 
+        "https://github.com/eyal0/OctoPrint-PrintTimeGenius/archive/master.zip"                                        
+
+    - name: Install TP-Link Smartplug plugin
+      command: >
+        /home/octoprint/OctoPrint/bin/pip install
+        "https://github.com/jneilliii/OctoPrint-TPLinkSmartplug/archive/master.zip"  
+
+    - name: Restart the Octoprint Instance service
+      ansible.builtin.systemd:
+        name: "{{ service_name }}"
+        state: restarted        
